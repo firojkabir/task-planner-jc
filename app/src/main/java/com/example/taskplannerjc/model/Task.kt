@@ -7,7 +7,14 @@ enum class TaskState {
 }
 
 data class Task(
-    val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,
     var state: TaskState = TaskState.Pending
-)
+){
+    fun advance(): Task {
+        return when (state) {
+            TaskState.Pending -> copy(state = TaskState.InProgress)
+            TaskState.InProgress -> copy(state = TaskState.Complete)
+            TaskState.Complete -> this
+        }
+    }
+}

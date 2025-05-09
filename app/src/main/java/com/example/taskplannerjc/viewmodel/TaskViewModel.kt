@@ -2,26 +2,49 @@ package com.example.taskplannerjc.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.taskplannerjc.model.Task
-import com.example.taskplannerjc.model.TaskState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class TaskViewModel : ViewModel() {
-    val tasks = mutableStateListOf<Task>()
+    private val _taskList = mutableStateListOf<Task>()
+    val taskList: List<Task> get() = _taskList
 
-    fun addTask(title: String) {
-        tasks.add(Task(title = title))
-    }
-
-    fun advanceTaskState(task: Task) {
-        val index = tasks.indexOf(task)
-        if (index != -1) {
-            tasks[index] = task.copy(state = nextState(task.state))
+    fun loadTasks() {
+        viewModelScope.launch {
+            delay(500)
+            _taskList.addAll(
+                listOf(
+                    Task("Read professor feedback"),
+                    Task("Write Jetpack Compose chapter"),
+                    Task("Integrate coroutines")
+                )
+            )
         }
     }
 
-    private fun nextState(current: TaskState): TaskState = when (current) {
-        TaskState.Pending -> TaskState.InProgress
-        TaskState.InProgress -> TaskState.Complete
-        TaskState.Complete -> TaskState.Complete
+    fun addTask(title: String) {
+        viewModelScope.launch {
+            delay(300)
+            _taskList.add(Task(title))
+        }
+    }
+
+    fun advanceTaskState(task: Task) {
+        viewModelScope.launch {
+            delay(200)
+            val index = _taskList.indexOf(task)
+            if (index != -1) {
+                _taskList[index] = task.advance()
+            }
+        }
+    }
+
+    fun deleteTask(task: Task) {
+        viewModelScope.launch {
+            delay(250)
+            _taskList.remove(task)
+        }
     }
 }
