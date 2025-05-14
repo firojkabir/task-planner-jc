@@ -1,20 +1,15 @@
 package com.example.taskplannerjc.model
 
-enum class TaskState {
-    Pending,
-    InProgress,
-    Complete
-}
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
+@Entity(tableName = "tasks")
 data class Task(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
-    var state: TaskState = TaskState.Pending
-){
-    fun advance(): Task {
-        return when (state) {
-            TaskState.Pending -> copy(state = TaskState.InProgress)
-            TaskState.InProgress -> copy(state = TaskState.Complete)
-            TaskState.Complete -> this
-        }
-    }
+    val status: TaskStatus = TaskStatus.PENDING
+)
+
+enum class TaskStatus {
+    PENDING, IN_PROGRESS, COMPLETE
 }

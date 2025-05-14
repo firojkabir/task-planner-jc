@@ -1,50 +1,40 @@
 package com.example.taskplannerjc.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taskplannerjc.model.Task
-import kotlinx.coroutines.delay
+import com.example.taskplannerjc.model.TaskStatus
+import com.example.taskplannerjc.repository.TaskRepository
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class TaskViewModel : ViewModel() {
-    private val _taskList = mutableStateListOf<Task>()
-    val taskList: List<Task> get() = _taskList
-
-    fun loadTasks() {
-        viewModelScope.launch {
-            delay(500)
-            _taskList.addAll(
-                listOf(
-                    Task("Read professor feedback"),
-                    Task("Write Jetpack Compose chapter"),
-                    Task("Integrate coroutines")
-                )
-            )
-        }
-    }
+class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
+    val tasks: StateFlow<List<Task>> = repository.allTasks.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
 
     fun addTask(title: String) {
         viewModelScope.launch {
-            delay(300)
-            _taskList.add(Task(title))
-        }
-    }
-
-    fun advanceTaskState(task: Task) {
-        viewModelScope.launch {
-            delay(200)
-            val index = _taskList.indexOf(task)
-            if (index != -1) {
-                _taskList[index] = task.advance()
-            }
+            repository.insert(Task(title = title))
         }
     }
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {
-            delay(250)
-            _taskList.remove(task)
+            repository.delete(task)
+        }
+    }
+
+    fun advanceStatus(task: Task) {
+        val newStatus = when (task.status) {
+            TaskStatus.PENDING -> TaskStatus.IN_PROGRESS
+            TaskStatus.IN_PROGRESS -> TaskStatus.COMPLETE
+            TaskStatus.COMPLETE -> return
+        }
+        viewModelScope.launch {
+            repository.update(task.copy(status = newStatus))
         }
     }
 }
